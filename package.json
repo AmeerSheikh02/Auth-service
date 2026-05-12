@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/AmeerSheikh02/Auth-service#readme",
   "dependencies": {
-    "@prisma/client": "^7.8.0",
+    "@prisma/client": "^6.7.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -30,6 +30,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
+    "prisma": "^6.7.0",
     "redis": "^5.12.1"
   },
   "devDependencies": {
@@ -38,7 +39,6 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.7.0",
-    "prisma": "^7.8.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.3"
   }
