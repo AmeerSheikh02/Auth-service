@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 
+import jwt from "jsonwebtoken"
+
 import prisma from "../config/prisma";
 
 export const register = async (req: Request, res: Response)  =>{
@@ -46,5 +48,46 @@ export const register = async (req: Request, res: Response)  =>{
         res.status(500).json({
             message : "Internal Server Error",
         });
+    }
+}
+
+
+export const login = async (req : Request, res : Response) =>{
+
+    try{
+        const { email, password } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where :{
+                email,
+            }
+        });
+
+        if(!user){
+            return res.status(400).json({ message : "User not found"});
+        }
+
+        
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if(!isMatch){
+            return res.status(400).json({ message : "Invalid credentials"});
+        }
+
+        const token = jwt.sign(
+            { userId : user.id , email : user.email },
+            "secret_key",
+            {expiresIn : "1d"},
+        );
+
+        res.json({
+            message : "Login Successfull",
+            token,
+        });
+    }
+    catch(err){
+        res.status(500).json({
+            message : "Server Error",
+        })
     }
 }
