@@ -5,11 +5,17 @@ import jwt from "jsonwebtoken"
 
 import prisma from "../config/prisma";
 
+import { registerSchema, loginSchema } from "../validators/auth.validators";
+
+
 export const register = async (req: Request, res: Response)  =>{
 
     try{
+        const validatedData = registerSchema.parse(req.body);
 
-        const { email, password} = req.body;
+        const { email, password } = validatedData;
+
+        // const { email, password} = req.body;
 
         const existingUser = await prisma.user.findUnique({
             where: {
@@ -55,7 +61,11 @@ export const register = async (req: Request, res: Response)  =>{
 export const login = async (req : Request, res : Response) =>{
 
     try{
-        const { email, password } = req.body;
+        const validatedData = loginSchema.parse(req.body);
+
+        const { email, password } = validatedData;
+        
+        // const { email, password } = req.body;
 
         const user = await prisma.user.findUnique({
             where :{
@@ -76,7 +86,8 @@ export const login = async (req : Request, res : Response) =>{
 
         const token = jwt.sign(
             { userId : user.id , email : user.email },
-            "secret_key",
+            process.env.JWT_SECRET as string,
+            // "secret_key",
             {expiresIn : "1d"},
         );
 
