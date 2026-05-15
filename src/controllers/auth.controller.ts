@@ -7,6 +7,8 @@ import prisma from "../config/prisma";
 
 import { registerSchema, loginSchema } from "../validators/auth.validators";
 
+import { generateAccessToken,  generateRefreshToken, } from "../utils/generateToken";
+
 
 export const register = async (req: Request, res: Response)  =>{
 
@@ -84,16 +86,33 @@ export const login = async (req : Request, res : Response) =>{
             return res.status(400).json({ message : "Invalid credentials"});
         }
 
-        const token = jwt.sign(
-            { userId : user.id , email : user.email },
-            process.env.JWT_SECRET as string,
-            // "secret_key",
-            {expiresIn : "1d"},
-        );
+        //this is without refreshing token
+        // const token = jwt.sign(
+        //     { userId : user.id , email : user.email },
+        //     process.env.JWT_SECRET as string,
+        //     // "secret_key",
+        //     {expiresIn : "1d"},
+        // );
+
+        //updated token handling
+        const accesstoken = generateAccessToken(user);
+        const refreshtoken = generateRefreshToken(user);
+
+        //new for token update
+        await prisma.user.update({
+            where : {
+                id : user.id,
+            },
+            data : {
+                refreshToken : refreshtoken,
+            },
+        });
 
         res.json({
             message : "Login Successfull",
-            token,
+            // token, - old
+            accesstoken,
+            refreshtoken,
         });
 
         
@@ -104,3 +123,43 @@ export const login = async (req : Request, res : Response) =>{
         })
     }
 }
+
+export const refreshAccessToken = async (req : Request, res : Response) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        message: "Refresh token missing",
+      });
+    }
+
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET as string
+    ) as any;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded.userId,
+      },
+    });
+
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(403).json({
+        message: "Invalid refresh token",
+      });
+    }
+
+    const newAccessToken = generateAccessToken(user);
+
+    res.json({
+      accessToken: newAccessToken,
+    });
+
+  } catch (err) {
+    res.status(403).json({
+      message: "Invalid or expired refresh token",
+    });
+  }
+};

@@ -13,5 +13,6 @@ model User {
   password  String
   role      String   @default("USER")
   verified  Boolean  @default(false)
+  refreshToken String?
   createdAt DateTime @default(now())
 }
